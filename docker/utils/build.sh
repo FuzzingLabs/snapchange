@@ -31,7 +31,7 @@ if [[ -z "$SNAPSHOT_USER" ]]; then
 else
     USER="$SNAPSHOT_USER"
 fi
-if [[ -z "$LIBFUZZER" ]]; then 
+if [[ -z "$LIBFUZZER" ]]; then
     LIBFUZZER=0
 else
     SNAPSHOT_FUNCTION="LLVMFuzzerTestOneInput"
@@ -106,7 +106,7 @@ log_msg "preparing harnes root filesystem for snapshot"
 BIN="$DIR/$SNAPSHOT_ENTRYPOINT"
 
 if ! [[ -e "$BIN" ]]; then
-  log_error "harness root filesystem does not contain entrypoint $SNAPSHOT_ENTRYPOINT"
+  log_error "harness root filesystem does not contain entrypoint $SNAPSHOT_ENTRYPOINT (tried to resolve $BIN)"
   exit 1
 fi
 
@@ -120,7 +120,7 @@ if ! [[ -z "$SNAPSHOT_EXTRACT" ]]; then
   done
 fi
 
-if [[ "$SNAPSHOT_FUNCTION" ]]; then 
+if [[ "$SNAPSHOT_FUNCTION" ]]; then
 
     if ! nm "$BIN" | grep $SNAPSHOT_FUNCTION; then
         log_error "$SNAPSHOT_FUNCTION not found in $BIN."
@@ -136,14 +136,14 @@ if [[ "$SNAPSHOT_FUNCTION" ]]; then
         log_error "please install radare2/rizin for patching"
         exit 1
     fi
-    
+
     # If there is a snapshot function, dump the first 16 bytes of LLVMFuzzerTestOneInput to restore
-    # after taking the snapshot. These bytes are corrupted 
+    # after taking the snapshot. These bytes are corrupted
     "$R2Z" -q -c "p8 16 @ sym.$SNAPSHOT_FUNCTION" $BIN > /tmp/libfuzzer.bytes.bak
     cat /tmp/libfuzzer.bytes.bak
 fi
 
- 
+
 if [[ $USER = 'root' ]]; then
     HOMEDIR=/root/
 else
@@ -437,7 +437,7 @@ elif [[ "$SNAPSHOT_FUNCTION" ]]; then
     cat > "$DIR/$GDBCMDS" <<EOF
 $(printf "$LOAD_SYMBOL_FILE")
 set pagination off
-# Ignore leak detection. 
+# Ignore leak detection.
 set environment ASAN_OPTIONS=detect_leaks=0
 
 # Stop at the first chance in the target in order to enable the breakpoint on $SNAPSHOT_FUNCTION
@@ -446,7 +446,7 @@ del *
 
 $SANITIZER_FUNCTIONS
 
-# Insert (int3 ; vmcall) on the $SNAPSHOT_FUNCTION 
+# Insert (int3 ; vmcall) on the $SNAPSHOT_FUNCTION
 set {unsigned char}($SNAPSHOT_FUNCTION+0x0)=0xcc
 set {unsigned char}($SNAPSHOT_FUNCTION+0x1)=0x0f
 set {unsigned char}($SNAPSHOT_FUNCTION+0x2)=0x01
@@ -485,7 +485,7 @@ EOF
 else
     if [[ "$SNAPSHOT_GDB_MODE" == "detach" ]]; then
         cp "$DIR/$GDBCMDS.detach" "$DIR/$GDBCMDS"
-    else 
+    else
         if [[ "$SNAPSHOT_GDB_MODE" != "quit" ]]; then
             echo "Invalid SNAPSHOT_GDB_MODE=$SNAPSHOT_GDB_MODE - using \"quit\""
         fi

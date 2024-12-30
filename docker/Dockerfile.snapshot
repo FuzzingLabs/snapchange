@@ -2,15 +2,15 @@ ARG UBUNTU_VERSION=22.04
 FROM ubuntu:$UBUNTU_VERSION
 
 # Install prereqs
-ARG DEBIAN_FRONTEND=noninteractive 
-ARG TZ="America/Chicago" 
+ARG DEBIAN_FRONTEND=noninteractive
+ARG TZ="America/Chicago"
 RUN apt-get update -q \
   && apt-get install -y --no-install-recommends -q \
     build-essential \
     meson ninja-build cmake \
     python3 python3-pip python-is-python3 \
     curl sudo tzdata git gcc g++ bc lcov libattr1 libattr1-dev libcap-ng0 libcap-ng-dev e2tools unzip \
-    libglib2.0-dev libgcrypt20-dev zlib1g-dev autoconf automake libtool \
+    libglib2.0-dev libgcrypt20-dev zstd zlib1g-dev autoconf automake libtool \
     bison flex libpixman-1-dev \
     clang make ninja-build debootstrap libelf-dev \
     libssl-dev pkg-config \
@@ -40,13 +40,12 @@ ENV BUSYBOX_STATIC="$BUSYBOX_STATIC"
 
 ARG RZ_BUILD_FROM_SOURCE=0
 
-RUN echo "[+] installers:" \
-  && set -x \
-  && ./install/rizin.sh \
-  && ./install/ghidra.sh \
-  && ./install/angr.sh \
-  && ./install/qemu.sh \
-  && ./install/linux.sh \
+RUN echo "[+] installers:"
+RUN set -x && ./install/rizin.sh
+RUN set -x && ./install/ghidra.sh
+RUN set -x && ./install/angr.sh
+RUN set -x && ./install/qemu.sh
+RUN set -x && ./install/linux.sh \
   && ls -al /snapchange/ \
   && test -e /snapchange/vmlinux \
   && test -e /snapchange/linux.bzImage \
