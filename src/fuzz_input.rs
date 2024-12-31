@@ -935,7 +935,7 @@ pub enum CoverageType {
 }
 
 /// Metadata about a crashing input or a new input that found new coverage.
-#[derive(Serialize, Deserialize, PartialEq, Eq, Hash, Default)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Hash, Default)]
 pub struct InputMetadata {
     /// Fuzz hash of the original file used for mutation
     #[serde(with = "SerHex::<CompactPfx>")]
@@ -952,6 +952,7 @@ pub struct InputMetadata {
 }
 
 /// An input tied with metadata about that input
+#[derive(Debug)]
 pub struct InputWithMetadata<T: FuzzInput> {
     /// The input in question
     pub input: T,
