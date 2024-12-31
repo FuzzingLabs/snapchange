@@ -63,6 +63,9 @@ fi
 if [[ -z "$SNAPSHOT_ENV" ]]; then
     SNAPSHOT_ENV=""
 fi
+if [[ -z "$SNAPSHOT_LD_PRELOAD" ]]; then
+    SNAPSHOT_LD_PRELOAD=""
+fi
 if [[ -z "$SNAPSHOT_RUN_AFTER" ]]; then
     SNAPSHOT_RUN_AFTER=""
 fi
@@ -398,6 +401,7 @@ fi
 
 cat > "$DIR/$GDBCMDS.basic" <<EOF
 $(printf "$LOAD_SYMBOL_FILE")
+set environment LD_PRELOAD=$SNAPSHOT_LD_PRELOAD
 set pagination off
 run
 bt
@@ -412,6 +416,7 @@ EOF
 
 cat > "$DIR/$GDBCMDS.detach" <<EOF
 $(printf "$LOAD_SYMBOL_FILE")
+set environment LD_PRELOAD=$SNAPSHOT_LD_PRELOAD
 set pagination off
 run
 bt
@@ -439,6 +444,7 @@ $(printf "$LOAD_SYMBOL_FILE")
 set pagination off
 # Ignore leak detection.
 set environment ASAN_OPTIONS=detect_leaks=0
+set environment LD_PRELOAD=$SNAPSHOT_LD_PRELOAD
 
 # Stop at the first chance in the target in order to enable the breakpoint on $SNAPSHOT_FUNCTION
 start
