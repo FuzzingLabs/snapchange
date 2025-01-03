@@ -422,7 +422,7 @@ pub fn hexdump(data: &[u8], starting_address: u64) {
             match b {
                 0x00 => print!("{:02x} ", b.green()),
                 0x0a | 0xff => print!("{:02x} ", b.red()),
-                0x21..0x7e => print!("{:02x} ", b.yellow()),
+                0x21..=0x7e => print!("{:02x} ", b.yellow()),
                 0x7f => print!("{:02x} ", b.blue()),
                 _ => print!("{:02x} ", b.white()),
             }
@@ -441,7 +441,7 @@ pub fn hexdump(data: &[u8], starting_address: u64) {
             match b {
                 0x00 => print!("{}", '.'.green()),
                 0x0a | 0xff => print!("{}", '.'.red()),
-                0x21..0x7e => print!("{}", (*b as char).yellow()),
+                0x21..=0x7e => print!("{}", (*b as char).yellow()),
                 0x7f => print!("{}", '.'.blue()),
                 _ => print!("{}", '.'.white()),
             }

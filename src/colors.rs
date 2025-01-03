@@ -75,6 +75,7 @@ macro_rules! trait_func {
 }
 
 /// Provides wrapper functions to apply foreground colors
+#[allow(dead_code)]
 pub trait Colorized {
     trait_func!(black, Black);
     trait_func!(red, Red);

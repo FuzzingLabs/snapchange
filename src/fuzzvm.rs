@@ -900,7 +900,7 @@ impl<'a, FUZZER: Fuzzer> FuzzVm<'a, FUZZER> {
         // are used to signal resets or crashes
         if let Some(ref mut cov_bps) = fuzzvm.coverage_breakpoints {
             for (addr, _cr3) in fuzzvm.reset_breakpoints.as_ref().unwrap().keys() {
-                cov_bps.remove(addr);
+                cov_bps.swap_remove(addr);
             }
         }
 
@@ -3246,7 +3246,7 @@ impl<'a, FUZZER: Fuzzer> FuzzVm<'a, FUZZER> {
             // coverage breakpoint. The fuzzer breakpoint takes precedence, so we remove
             // it from being considered a coverage breakpoint
             if let Some(cov_bps) = &mut self.coverage_breakpoints {
-                let _prev_entry = cov_bps.remove(virt_addr);
+                cov_bps.swap_remove(virt_addr);
             }
         }
 
@@ -4061,7 +4061,7 @@ impl<'a, FUZZER: Fuzzer> FuzzVm<'a, FUZZER> {
                                     )?;
 
                                     if reset_bps
-                                        .remove_entry(&(VirtAddr(self.rip()), self.cr3()))
+                                        .swap_remove_entry(&(VirtAddr(self.rip()), self.cr3()))
                                         .is_none()
                                     {
                                         panic!(

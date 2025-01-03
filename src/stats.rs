@@ -886,7 +886,7 @@ pub fn worker<FUZZER: Fuzzer>(
     mut coverage_analysis: Option<CoverageAnalysis>,
     tui: bool,
     config: &Config, // redqueen_rules: BTreeMap<u64, BTreeSet<RedqueenRule>>
-    stop_after_first_crash: bool,
+    _stop_after_first_crash: bool,
     stop_after_time: Option<Duration>,
 ) -> Result<()> {
     // Create the data directory if it doesn't exist to store raw data from the fuzzer

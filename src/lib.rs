@@ -93,7 +93,6 @@
 //!
 //!
 //!
-#![feature(exclusive_range_pattern)]
 #![feature(trait_alias)]
 #![feature(thread_id_value)]
 #![feature(map_try_insert)]
