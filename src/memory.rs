@@ -224,7 +224,7 @@ impl Memory {
             libc::madvise(mem_ptr, guest_memory_size as usize, libc::MADV_MERGEABLE);
         }
 
-        Ok(Memory::from_addr(mem_ptr as u64, guest_memory_size as u64))
+        Ok(Memory::from_addr(mem_ptr as u64, guest_memory_size))
     }
 
     /// Get the underlying backing address
@@ -435,7 +435,7 @@ impl Memory {
         //             [Lvl1index][Lvl2index][Lvl3index][Lvl4index]
         let mut table_indexes = virt_addr.table_indexes();
 
-        for (_level, index) in table_indexes.iter_mut().enumerate() {
+        for index in table_indexes.iter_mut() {
             // Get the page table entry at the given index
             let entry = &mut curr_table[*index];
 
@@ -527,7 +527,7 @@ impl Memory {
     pub fn read_phys_bytes<T: Copy>(&mut self, phys_addr: PhysAddr, buf: &mut [T]) -> Result<()> {
         if let Some(last_addr) = phys_addr.0.checked_add(buf.len() as u64) {
             ensure!(
-                last_addr <= self.memory_backing + self.size as u64,
+                last_addr <= self.memory_backing + self.size,
                 Error::ReadPhysicalAddressOutOfBounds
             );
 
@@ -572,7 +572,7 @@ impl Memory {
 
         if let Some(last_addr) = phys_addr.0.checked_add(std::mem::size_of::<T>() as u64) {
             ensure!(
-                last_addr <= self.memory_backing + self.size as u64,
+                last_addr <= self.memory_backing + self.size,
                 Error::ReadPhysicalAddressOutOfBounds
             );
 
@@ -615,7 +615,7 @@ impl Memory {
             .context(Error::ReadFromUnmappedVirtualAddress(virt_addr, cr3))?;
 
         // Read the requested type from the translated physical address
-        Ok(self.read_phys(phys_addr)?)
+        self.read_phys(phys_addr)
     }
 
     /// Read the requested type from the given [`VirtAddr`] using the [`Cr3`] page table

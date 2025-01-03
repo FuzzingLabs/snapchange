@@ -123,7 +123,7 @@ pub(crate) fn start_core<FUZZER: Fuzzer>(
         u64::try_from(core_id.id)?,
         &mut fuzzer,
         vm,
-        &vbcpu,
+        vbcpu,
         cpuid,
         snapshot_fd.as_raw_fd(),
         clean_snapshot,
@@ -137,7 +137,7 @@ pub(crate) fn start_core<FUZZER: Fuzzer>(
     )?;
 
     // Get the input to trace
-    let input = InputWithMetadata::from_path(input_case, &project_dir)?;
+    let input = InputWithMetadata::from_path(input_case, project_dir)?;
 
     log::info!(
         "gathering coverage for input {} with timeout: {:?}",
@@ -193,7 +193,7 @@ pub(crate) fn start_core<FUZZER: Fuzzer>(
     );
     crate::stats::write_lighthouse_coverage(&project_state.modules, &feedback, &lighthouse_file)?;
 
-    if let Ok(debug_info) = crate::stats::DebugInfo::new(&project_state) {
+    if let Ok(debug_info) = crate::stats::DebugInfo::new(project_state) {
         // Get the lcov coverage file
         let coverage_lcov = coverage_dir.join(format!("{orig_file_name}.lcov.info"));
         log::info!("Writing lcov coverage to {}", coverage_lcov.display());

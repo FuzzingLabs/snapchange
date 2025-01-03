@@ -132,7 +132,7 @@ impl Descriptor {
             base: self.base.unwrap(),
             limit: self.limit,
             selector: self.selector,
-            type_: type_,
+            type_,
             present: self.present.into(),
             dpl: self.descriptor_privilege as u8,
             db: 0,

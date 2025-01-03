@@ -111,14 +111,14 @@ pub(crate) fn run<FUZZER: Fuzzer>(
             // Get the variables for this thread
             let paths = paths.clone();
             let path_index = path_index.clone();
-            let vbcpu = project_state.vbcpu.clone();
+            let vbcpu = project_state.vbcpu;
             let cpuids = cpuids.clone();
             let physmem_file_fd = physmem_file.as_raw_fd();
             let config = project_state.config.clone();
             let symbols = symbols.clone();
             let symbol_breakpoints = symbol_breakpoints.clone();
             let covbp_bytes = covbp_bytes.clone();
-            let timeout = args.timeout.clone();
+            let timeout = args.timeout;
             let clean_snapshot = clean_snapshot.clone();
             let project_dir = project_state.path.clone();
 
@@ -251,7 +251,7 @@ pub(crate) fn run<FUZZER: Fuzzer>(
     );
 
     let coverage_lcov = project_state.path.clone().join("coverage_min.lcov.info");
-    if let Ok(debug_info) = crate::stats::DebugInfo::new(&project_state) {
+    if let Ok(debug_info) = crate::stats::DebugInfo::new(project_state) {
         let mut lcov = debug_info.empty_lcov_info();
         debug_info.update_lcov_addresses(
             &mut lcov,
@@ -421,7 +421,7 @@ pub(crate) fn start_core<FUZZER: Fuzzer>(
         result.insert(curr_index, coverage);
 
         // Reset the guest state
-        let _perf = fuzzvm.reset_guest_state(&mut fuzzer)?;
+        fuzzvm.reset_guest_state(&mut fuzzer)?;
 
         // Reset the fuzzer state
         fuzzer.reset_fuzzer_state();
@@ -473,15 +473,15 @@ impl CorpusMinimizer {
     pub fn size(&self) {
         let sum: usize = self
             .addr_to_inputs
-            .iter()
-            .map(|(_k, v)| std::mem::size_of::<u64>() + v.len() * size_of::<usize>())
+            .values()
+            .map(|v| std::mem::size_of::<u64>() + v.len() * size_of::<usize>())
             .sum();
         log::info!("Size of addr_to_inputs: {}", get_byte_size(sum as u64));
 
         let sum: usize = self
             .input_coverage
-            .iter()
-            .map(|(_k, v)| std::mem::size_of::<u64>() + v.len() * size_of::<u64>())
+            .values()
+            .map(|v| std::mem::size_of::<u64>() + v.len() * size_of::<u64>())
             .sum();
         log::info!("Size of input_coverage: {}", get_byte_size(sum as u64));
     }
@@ -555,7 +555,7 @@ impl CorpusMinimizer {
         }
 
         // Return the removed path indexes
-        let trash = self.input_coverage.keys().map(|x| *x).collect();
+        let trash = self.input_coverage.keys().copied().collect();
 
         // Replace the current minimizer with the newly created one
         *self = new_minimizer;

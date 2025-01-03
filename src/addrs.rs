@@ -59,9 +59,9 @@ impl From<u64> for VirtAddr {
     }
 }
 
-impl Into<u64> for VirtAddr {
-    fn into(self) -> u64 {
-        self.0
+impl From<VirtAddr> for u64 {
+    fn from(val: VirtAddr) -> Self {
+        val.0
     }
 }
 

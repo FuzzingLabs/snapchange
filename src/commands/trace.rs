@@ -347,24 +347,21 @@ fn start_core<FUZZER: Fuzzer>(
                         if translation.phys_addr().is_some()
                             && translation.is_executable()
                             && !translation.is_writable()
+                            && !fuzzvm.has_breakpoint(retaddr, fuzzvm.cr3())
                         {
-                            if !fuzzvm.has_breakpoint(retaddr, fuzzvm.cr3()) {
-                                log::debug!("setting retaddr breakpoint for newly discovered return address {retaddr:?}");
-                                // set breakpoint at callsite
-                                let res = fuzzvm.set_breakpoint(
-                                    retaddr,
-                                    fuzzvm.cr3(),
-                                    BreakpointType::Repeated,
-                                    BreakpointMemory::NotDirty,
-                                    BreakpointHook::Ignore,
-                                );
-                                match res {
-                                    Ok(_) => {}
-                                    Err(e) => {
-                                        log::debug!(
-                                            "invalid retaddr breakpoint @ {retaddr:?} {e:?}"
-                                        );
-                                    }
+                            log::debug!("setting retaddr breakpoint for newly discovered return address {retaddr:?}");
+                            // set breakpoint at callsite
+                            let res = fuzzvm.set_breakpoint(
+                                retaddr,
+                                fuzzvm.cr3(),
+                                BreakpointType::Repeated,
+                                BreakpointMemory::NotDirty,
+                                BreakpointHook::Ignore,
+                            );
+                            match res {
+                                Ok(_) => {}
+                                Err(e) => {
+                                    log::debug!("invalid retaddr breakpoint @ {retaddr:?} {e:?}");
                                 }
                             }
                         }
@@ -624,7 +621,7 @@ fn start_core<FUZZER: Fuzzer>(
             if single_step {
                 trace_file.set_file_name(format!("{orig_file_name}_trace"));
             } else {
-                trace_file.set_file_name(&format!("{orig_file_name}_trace.no_single_step"));
+                trace_file.set_file_name(format!("{orig_file_name}_trace.no_single_step"));
             }
 
             trace_file

@@ -1872,7 +1872,7 @@ pub fn worker<FUZZER: Fuzzer>(
                 alive = 0;
 
                 // Calculate the current statistics
-                for (_core_id, core_stats) in stats.iter().enumerate() {
+                for core_stats in stats.iter() {
                     let mut stats = core_stats.lock().unwrap();
 
                     // Add this core's corpus to the total corpus
@@ -2199,10 +2199,10 @@ impl DebugInfo {
     }
 
     /// populate debug info given a project state and associated addr2line contexts.
-    pub fn populate<'a>(
+    pub fn populate(
         &mut self,
         project_state: &crate::ProjectState,
-        contexts: &'a ContextSlice,
+        contexts: &ContextSlice,
     ) -> Result<()> {
         let cov_bps = project_state
             .coverage_basic_blocks
@@ -2246,7 +2246,7 @@ impl DebugInfo {
                     .modules
                     .get_module_start_containing(start_addr)
                 {
-                    start_addr = start_addr - module_start;
+                    start_addr -= module_start;
                 } else {
                     break;
                 }
@@ -2348,7 +2348,7 @@ impl DebugInfo {
     }
 
     /// Obtain the first debug location associated with the given address.
-    pub fn get_first_location<'a, V: Into<VirtAddr>>(&'a self, addr: V) -> Option<(&'a str, u32)> {
+    pub fn get_first_location<V: Into<VirtAddr>>(&self, addr: V) -> Option<(&str, u32)> {
         let addr: VirtAddr = addr.into();
         if let Some(locs) = self.vaddrs.get(&addr) {
             if let Some(loc_index) = locs.first().copied() {

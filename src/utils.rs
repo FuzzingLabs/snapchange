@@ -62,10 +62,10 @@ pub mod vec {
         // 2. we asserted before that `index` is in-bounds of `dst`.
         // 3. we asserted that `src` and `dst` do not overlap.
         unsafe {
-            let ptr = dst.as_mut_ptr().offset(index as isize);
+            let ptr = dst.as_mut_ptr().add(index);
             // check if we are only appending -> no need to move old contents
             if index < dst.len() {
-                std::ptr::copy(ptr, ptr.offset(src.len() as isize), old_len - index);
+                std::ptr::copy(ptr, ptr.add(src.len()), old_len - index);
             }
             std::ptr::copy_nonoverlapping(src.as_ptr(), ptr, src.len());
             dst.set_len(new_len);
@@ -120,13 +120,13 @@ pub mod vec {
         // 2. we asserted before that `index` is in-bounds of `dst`.
         // 3. we asserted that `a|b` and `dst` do not overlap.
         unsafe {
-            let ptr = dst.as_mut_ptr().offset(index as isize);
+            let ptr = dst.as_mut_ptr().add(index);
             // check if we are only appending -> no need to move old contents
             if index < old_len {
-                std::ptr::copy(ptr, ptr.offset(src_len as isize), old_len - index);
+                std::ptr::copy(ptr, ptr.add(src_len), old_len - index);
             }
             std::ptr::copy_nonoverlapping(a.as_ptr(), ptr, a.len());
-            std::ptr::copy_nonoverlapping(b.as_ptr(), ptr.offset(a.len() as isize), b.len());
+            std::ptr::copy_nonoverlapping(b.as_ptr(), ptr.add(a.len()), b.len());
             dst.set_len(new_len);
         }
     }
@@ -176,15 +176,15 @@ pub mod vec {
         // 2. we asserted before that `index` is in-bounds of `dst`.
         // 3. we asserted that `a|b|c` and `dst` do not overlap.
         unsafe {
-            let ptr = dst.as_mut_ptr().offset(index as isize);
+            let ptr = dst.as_mut_ptr().add(index);
             // check if we are only appending -> no need to move old contents
             if index < old_len {
-                std::ptr::copy(ptr, ptr.offset(src_len as isize), old_len - index);
+                std::ptr::copy(ptr, ptr.add(src_len), old_len - index);
             }
             std::ptr::copy_nonoverlapping(a.as_ptr(), ptr, a.len());
-            let ptr = ptr.offset(a.len() as isize);
+            let ptr = ptr.add(a.len());
             std::ptr::copy_nonoverlapping(b.as_ptr(), ptr, b.len());
-            let ptr = ptr.offset(b.len() as isize);
+            let ptr = ptr.add(b.len());
             std::ptr::copy_nonoverlapping(c.as_ptr(), ptr, c.len());
             dst.set_len(new_len);
         }
@@ -226,10 +226,10 @@ pub mod vec {
         // 2. we asserted before that `index` is in-bounds of `dst`.
         // 3. we asserted that `src` and `dst` do not overlap.
         unsafe {
-            let ptr = dst.as_mut_ptr().offset(index as isize);
+            let ptr = dst.as_mut_ptr().add(index);
             // check if we are only appending -> no need to move old contents
             if index != old_len {
-                std::ptr::copy(ptr, ptr.offset(src_len as isize), old_len - index);
+                std::ptr::copy(ptr, ptr.add(src_len), old_len - index);
             }
             std::ptr::write_unaligned(ptr, before);
             std::ptr::copy_nonoverlapping(src.as_ptr(), ptr.offset(1isize), src.len());
@@ -507,7 +507,7 @@ pub fn get_files<P: std::convert::AsRef<std::path::Path>>(
 
         if file_type.is_dir() {
             if recurse {
-                let dir_files = get_files(&entry.path(), recurse)?;
+                let dir_files = get_files(entry.path(), recurse)?;
                 files.extend(dir_files);
             }
         } else if file_type.is_file() {

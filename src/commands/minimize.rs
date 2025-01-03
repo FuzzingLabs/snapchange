@@ -87,7 +87,7 @@ fn start_core<FUZZER: Fuzzer>(
     let redqueen_breakpoints = None;
 
     use MinimizeCodeCovLevel::{BasicBlock, Hitcounts};
-    if matches!(min_params.codecov_level, Hitcounts | BasicBlock) && !coverage_breakpoints.is_some()
+    if matches!(min_params.codecov_level, Hitcounts | BasicBlock) && coverage_breakpoints.is_none()
     {
         anyhow::bail!("code coverage level requires breakpoint addresses!");
     }
@@ -146,7 +146,7 @@ fn start_core<FUZZER: Fuzzer>(
 
     // Get the initial input
 
-    let input_bytes = std::fs::read(&input_fuzzcase)?;
+    let input_bytes = std::fs::read(input_fuzzcase)?;
     let start_input_size = input_bytes.len();
 
     let starting_input: InputWithMetadata<FUZZER::Input> =
@@ -437,7 +437,7 @@ fn start_core<FUZZER: Fuzzer>(
     );
 
     log::info!("Writing minimized file: {:?}", output_fuzzcase);
-    std::fs::write(&output_fuzzcase, &result_bytes)?;
+    std::fs::write(output_fuzzcase, &result_bytes)?;
 
     if min_params.dump_feedback {
         if let Some(feedback) = last_feedback {
@@ -453,7 +453,7 @@ fn start_core<FUZZER: Fuzzer>(
     if last_execution.is_crash() {
         // Allow the fuzzer to handle the crashing state
         // Useful for things like syscall fuzzer to write a C file from the input
-        fuzzer.handle_crash(&input, &mut fuzzvm, &output_fuzzcase)?;
+        fuzzer.handle_crash(&input, &mut fuzzvm, output_fuzzcase)?;
     }
 
     Ok(())
@@ -562,12 +562,12 @@ pub(crate) fn run<FUZZER: Fuzzer>(
             &symbols,
             symbol_breakpoints.as_ref(),
             covbps.as_ref(),
-            &infile,
+            infile,
             &outfile,
             args.timeout,
             args.iterations_per_stage,
             project_state.config.clone(),
-            minparams.clone(),
+            minparams,
             &project_state.path,
         )?;
         minimized += 1;

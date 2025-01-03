@@ -312,7 +312,7 @@ pub(crate) fn run(project_state: &ProjectState, args: &cmdline::Project) -> Resu
                 project_state
                     .coverage_basic_blocks
                     .as_ref()
-                    .and_then(|covbps| Some(covbps.len()))
+                    .map(|covbps| covbps.len())
                     .unwrap_or(0_usize)
             );
             let filepath = project_state.path.join("debug_info.json");

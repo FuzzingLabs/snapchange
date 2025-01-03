@@ -4418,7 +4418,7 @@ impl<'a, FUZZER: Fuzzer> FuzzVm<'a, FUZZER> {
             let curr_byte = self.read::<u8>(bp_addr, cr3)?;
             if curr_byte != 0xcc {
                 // Store the original byte for this address
-                hit_breakpoints.insert(bp_addr.into(), curr_byte);
+                hit_breakpoints.insert(bp_addr, curr_byte);
 
                 // Write a breakpoint at this address to look for coverage
                 self.write_bytes_dirty(bp_addr, cr3, &[0xcc])?;

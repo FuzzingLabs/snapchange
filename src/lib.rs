@@ -482,7 +482,7 @@ fn handle_vmexit<FUZZER: Fuzzer>(
             };
 
             if let Some(crash_file) =
-                write_crash_input(&crash_dir, &dirname, &input, &fuzzvm.console_output)?
+                write_crash_input(&crash_dir, &dirname, input, &fuzzvm.console_output)?
             {
                 // Allow the fuzzer to handle the crashing state
                 // Useful for things like syscall fuzzer to write a C file from the input
