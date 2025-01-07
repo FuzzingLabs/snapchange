@@ -12,7 +12,7 @@ symbols = defaultdict(list)
 
 
 def collect_kernel_symbols():
-    ''' Attempt to dump the kernel symbols. Fails if GDB is not ran as root '''
+    """Attempt to dump the kernel symbols. Fails if GDB is not ran as root"""
     if os.geteuid() != 0:
         print("ERROR: Kernel symbols not available.. GDB not executed as root")
     else:
@@ -24,14 +24,15 @@ def collect_kernel_symbols():
         # Parse the kallsyms output
         parse_kallsyms(kallsyms)
 
+
 def parse_kallsyms(data):
-    ''' Parse the /proc/kallsyms output and return the symbol addresses '''
+    """Parse the /proc/kallsyms output and return the symbol addresses"""
     global symbols
 
-    for line in data.split('\n'):
+    for line in data.split("\n"):
         # Ignore (addr, __key*) line
-        if '__key' in line:
-             continue
+        if "__key" in line:
+            continue
 
         # Example line
         # ffffffffc0b2bb50 t btrfs_calculate_inode_block_rsv_size	[btrfs]
@@ -43,12 +44,13 @@ def parse_kallsyms(data):
         addr = int(line[0], 16)
         symbols[addr].append(line[2])
 
+
 def collect_process_memory_map():
-    ''' Dump the process memory map '''
+    """Dump the process memory map"""
     vmmap_file = "/tmp/gdb.vmmap"
     print("Memory written to {}".format(vmmap_file))
-    with open(vmmap_file, 'w') as f:
-        vmmap = gdb.execute('info proc mappings', to_string=True)
+    with open(vmmap_file, "w") as f:
+        vmmap = gdb.execute("info proc mappings", to_string=True)
         print(vmmap)
         f.write(vmmap)
 
@@ -57,28 +59,30 @@ def collect_process_memory_map():
     modules = {}
     special_regions = {}
 
-    for line in vmmap.split('\n'):
+    for line in vmmap.split("\n"):
         # Skip all lines until the header
-        if not started and 'Start Addr' not in line:
+        if not started and "Start Addr" not in line:
             continue
 
         # Found the header, skip it and start parsing the following lines
-        if not started and 'Start Addr' in line:
+        if not started and "Start Addr" in line:
             started = True
 
             # Expecting
             # Start Addr           End Addr       Size     Offset  Perms  objfile
             #   0x400000           0x41d000    0x1d000        0x0  r--p   /root/sudo
-            if 'Start Addr' not in line or \
-               'End Addr' not in line or \
-               'Size' not in line or \
-               'Offset' not in line or \
-               'Perms' not in line or  \
-               'objfile' not in line:
-                   print("Unknown GDB memory map.. Bailing early")
-                   print(line)
-                   print("Unknown GDB memory map.. Bailing early")
-                   return
+            if (
+                "Start Addr" not in line
+                or "End Addr" not in line
+                or "Size" not in line
+                or "Offset" not in line
+                or "Perms" not in line
+                or "objfile" not in line
+            ):
+                print("Unknown GDB memory map.. Bailing early")
+                print(line)
+                print("Unknown GDB memory map.. Bailing early")
+                return
             continue
 
         line = line.split()
@@ -95,16 +99,16 @@ def collect_process_memory_map():
         end_addr = int(end_addr, 16)
 
         # Ignore [vvar], [vdso], [stack], [vsyscall], ect
-        if '[' in filepath and ']' in filepath:
+        if "[" in filepath and "]" in filepath:
             special_regions[filepath.strip()] = (start_addr, end_addr)
             continue
 
         # Already processed this file, no need to process it again
         if filepath in found_files:
             # Sanity check the filename was initialized properly
-            assert('end' in modules[filename])
+            assert "end" in modules[filename]
 
-            modules[filename]['end'] = hex(end_addr)
+            modules[filename]["end"] = hex(end_addr)
             continue
 
         # New file
@@ -120,12 +124,12 @@ def collect_process_memory_map():
         # Init the module to parse with `nm` as False
         found = filepath
 
-        if filepath == '/sys/kernel/debug/kcov':
+        if filepath == "/sys/kernel/debug/kcov":
             continue
 
         # If the module is a library, search the /usr/lib/debug for the debug build.
-        # Otherwise, attempt to just get the symbols from the given binary 
-        if '/usr/lib' in filepath or filepath.startswith('/lib'):
+        # Otherwise, attempt to just get the symbols from the given binary
+        if "/usr/lib" in filepath or filepath.startswith("/lib"):
             if not os.path.exists("/usr/lib/debug/.build-id"):
                 print(".build_id not exist")
                 if os.path.exists("/usr/lib/debug"):
@@ -133,17 +137,21 @@ def collect_process_memory_map():
                     print("trying path for .debug", debug_path)
                     if os.path.exists(debug_path):
                         found = debug_path
-                    for (root, dirs, files) in os.walk("/usr/lib/debug"):
-                        if filename in files and "libc6-prof" not in root and "x86_64" in root:
+                    for root, dirs, files in os.walk("/usr/lib/debug"):
+                        if (
+                            filename in files
+                            and "libc6-prof" not in root
+                            and "x86_64" in root
+                        ):
                             found = os.path.join(root, filename)
                             break
             else:
                 print("debug", filepath)
                 try:
                     output = subprocess.check_output(["readelf", "-n", filepath])
-                    
+
                     for line in output.split(b"\n"):
-                        if b'Build ID' not in line:
+                        if b"Build ID" not in line:
                             continue
 
                         # Parse the build_id
@@ -151,11 +159,17 @@ def collect_process_memory_map():
                         dir1 = build_id[:2]
                         dir2 = build_id[2:]
 
-                        print('build_id', build_id) 
-                        debug_path = "/usr/lib/debug/.build-id/{}/{}.debug".format(dir1, dir2)
-                        print('debug_path', debug_path)
+                        print("build_id", build_id)
+                        debug_path = "/usr/lib/debug/.build-id/{}/{}.debug".format(
+                            dir1, dir2
+                        )
+                        print("debug_path", debug_path)
                         if not os.path.exists(debug_path):
-                            print("{} not found in .build-id with id: {}".format(filepath, build_id))
+                            print(
+                                "{} not found in .build-id with id: {}".format(
+                                    filepath, build_id
+                                )
+                            )
                             continue
 
                         found = debug_path
@@ -169,7 +183,7 @@ def collect_process_memory_map():
                 output = subprocess.check_output(["/usr/bin/objdump", "-x", found])
 
                 for line in output.split(b"\n"):
-                    if b'LOAD off' not in line:
+                    if b"LOAD off" not in line:
                         continue
 
                     # [b'LOAD', b'off', b'0x0000000000000000', b'vaddr', b'0x0000000000000000', b'paddr', b'0x0000000000000000'..
@@ -181,12 +195,15 @@ def collect_process_memory_map():
                     if start_addr == vaddr:
                         start_addr = 0
                     elif vaddr == 0:
-                        start_addr =  int(modules[filename]['start'], 16)
+                        start_addr = int(modules[filename]["start"], 16)
 
                     break
 
-                print("Gathering symbols for {} @ starting addr {}".format(filename,
-                    hex(start_addr)))
+                print(
+                    "Gathering symbols for {} @ starting addr {}".format(
+                        filename, hex(start_addr)
+                    )
+                )
                 try:
                     output = subprocess.check_output(["nm", found])
                     add_nm_output(output, start_addr, filename)
@@ -196,52 +213,61 @@ def collect_process_memory_map():
             except Exception as e:
                 print(f"ERROR objdump: {found} -- {e}")
 
-
     for x in modules.items():
         print(x)
 
     # Force page in all memory in all found modules
-    for (_filename, addrs) in modules.items():
-        start = int(addrs['start'], 0) & ~0xfff
-        end = (int(addrs['end'], 0) + 0xfff) & ~0xfff
+    for _filename, addrs in modules.items():
+        start = int(addrs["start"], 0) & ~0xFFF
+        end = (int(addrs["end"], 0) + 0xFFF) & ~0xFFF
         addrs = range(start, end, 0x1000)
-        for (i, page) in enumerate(addrs):
-            if i % 10 == 0:
-                print("Page: {}/{}: {:x}".format(i, len(addrs), page))
+
+        for i, page in enumerate(addrs):
             # Dump bytes from this page in order to force this memory to be paged in
             try:
-                gdb.execute('x/4b {}'.format(page), to_string=True)
-            except:
-                print("Addr {} for {} not found: {}".format(hex(page), filename, addrs))
+                res = gdb.execute(f"x/4b {page}", to_string=True)
+            except Exception as e:
+                print(f"Addr {hex(page)} for {filename} not found: {addrs}")
+                print(f" ↳ exception: {e}")
+                print(f" ↳ gdb result: {res}")
+                continue
+
+            if i % 1000 == 0:
+                print(f"Page: {i}/{len(addrs)}: {hex(page)}")
 
     print("touching special memory regions to ensure paged in")
-    for (filename, addrs) in special_regions.items():
+    for filename, addrs in special_regions.items():
         print("region: ", filename)
-        start = addrs[0] & ~0xfff
-        end = (addrs[1] + 0xfff) & ~0xfff
+        start = addrs[0] & ~0xFFF
+        end = (addrs[1] + 0xFFF) & ~0xFFF
         addrs = range(start, end, 0x1000)
-        for (i, page) in enumerate(addrs):
-            if i % 10 == 0:
-                print("Page: {}/{}: {:x}".format(i, len(addrs), page))
+
+        for i, page in enumerate(addrs):
             # Dump bytes from this page in order to force this memory to be paged in
             try:
-                gdb.execute('x/4b {}'.format(page), to_string=True)
-            except:
-                print("Addr {} for {} not found: {}".format(hex(page), filename, addrs))
+                res = gdb.execute(f"x/4b {page}", to_string=True)
+            except Exception as e:
+                print(f"Addr {hex(page)} for {filename} not found: {addrs}")
+                print(f" ↳ exception: {e}")
+                print(f" ↳ gdb result: {res}")
+                continue
 
+            if i % 1000 == 0:
+                print(f"Page: {i}/{len(addrs)}: {hex(page)}")
 
     # Write the specific modules file
     modules_file = "/tmp/gdb.modules"
     print("Modules found written to {}".format(modules_file))
-    with open(modules_file, 'w') as f:
-        for (filename, addrs) in modules.items():
-            f.write("{} {} {}\n".format(addrs['start'], addrs['end'], filename))
+    with open(modules_file, "w") as f:
+        for filename, addrs in modules.items():
+            f.write("{} {} {}\n".format(addrs["start"], addrs["end"], filename))
+
 
 def add_nm_output(data, start_addr, module):
-    ''' 
+    """
     Parse `nm` output of `module` and add the resulting symbols to the symbol database
     using the `start_addr` as the starting address
-    '''
+    """
     for line in data.split(b"\n"):
         line = line.split()
 
@@ -264,11 +290,12 @@ def add_nm_output(data, start_addr, module):
 
         symbols[symbol_addr].append(symbol)
 
+
 def write_symbols(symbols_file):
-    '''
+    """
     Write the found symbols from the process to the given `symbols_file`
-    '''
-    
+    """
+
     collect_kernel_symbols()
     collect_process_memory_map()
 
@@ -277,20 +304,21 @@ def write_symbols(symbols_file):
     final_results = []
 
     for index in range(0, len(sorted_items) - 1):
-        # Get the current and next symbol to calculate how 
+        # Get the current and next symbol to calculate how
         (curr_addr, s) = sorted_items[index]
 
         # Somehow no symbols for this address were added
         if len(s) == 0:
             continue
 
-        # Add the symbol to the final database 
+        # Add the symbol to the final database
         final_results.append((curr_addr, s[0]))
 
     print("Writing symbols to {}".format(symbols_file))
-    with open(symbols_file, 'w') as f:
-        for (addr, sym) in sorted(final_results):
+    with open(symbols_file, "w") as f:
+        for addr, sym in sorted(final_results):
             f.write(f"{addr:#x} {sym}\n")
+
 
 print("[gdbsnapshot.py] writing symbols")
 write_symbols("/tmp/gdb.symbols")
