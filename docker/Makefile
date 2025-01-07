@@ -1,5 +1,5 @@
 CTRT ?= docker
-GLOBAL_TAG ?= ghcr.io/awslabs/snapchange
+GLOBAL_TAG ?= ghcr.io/fuzzinglabs/snapchange
 KVM_GID ?= $(shell /bin/ls -lan /dev/kvm | cut -d' ' -f4)
 
 all: snapshot_image base_fuzzer_image base_target_image
@@ -9,7 +9,7 @@ snapshot_image:
 
 # mostly for testing
 build-template:
-	cd ./fuzzer_template && cargo --config 'patch."https://github.com/awslabs/snapchange".snapchange.path = "../../"' build
+	cd ./fuzzer_template && cargo --config 'patch."https://github.com/fuzzinglabs/snapchange".snapchange.path = "../../"' build
 
 base_fuzzer_image:
 	$(CTRT) build -t snapchange_base_fuzzer \

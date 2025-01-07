@@ -1,4 +1,4 @@
-FROM rust:1.71-slim-bookworm
+FROM rust:1.83-slim-bookworm
 
 # Update to nightly toolchain
 RUN rustup default nightly

@@ -3,7 +3,7 @@ FROM ubuntu:$UBUNTU_VERSION
 
 # Install prereqs
 ARG DEBIAN_FRONTEND=noninteractive
-ARG TZ="America/Chicago"
+ARG TZ="Europe/Paris"
 RUN apt-get update -q \
   && apt-get install -y --no-install-recommends -q \
     build-essential \

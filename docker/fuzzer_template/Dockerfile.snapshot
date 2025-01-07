@@ -3,7 +3,7 @@ ARG BASEIMG=harness
 FROM $BASEIMG as base
 
 #### snapchange snapshot container ####
-FROM ghcr.io/awslabs/snapchange
+FROM snapchange_snapshot
 
 # copy whole root filesystem from build environment to this container layer
 # SNAPSHOT_INPUT is the location that the snapshotting script will create.

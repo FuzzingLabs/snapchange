@@ -13,7 +13,7 @@ COPY ./harness/ /opt/
 RUN cd /opt/ && make clean && make
 
 #### switch to snapchang container ####
-FROM ghcr.io/awslabs/snapchange
+FROM ghcr.io/fuzzinglabs/snapchange
 
 # copy whole root filesystem from build environment to this container layer
 # SNAPSHOT_INPUT is the location that the snapshotting script will create.

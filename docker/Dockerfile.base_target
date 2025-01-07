@@ -1,4 +1,4 @@
-FROM alpine:edge as base
+FROM alpine:edge AS base
 
 RUN apk add --no-cache --initramfs-diskless-boot python3 gdb curl tar build-base perf \
     nasm gcc git musl-dbg clang compiler-rt llvm gcompat
