@@ -2377,7 +2377,6 @@ impl<'a, FUZZER: Fuzzer> FuzzVm<'a, FUZZER> {
         // Add the fuzzer specific symbols
         if let Some(symbols) = self.symbols {
             for Symbol { address, symbol } in symbols {
-                // if symbol.contains(subsymbol) {
                 if symbol == subsymbol {
                     let addr = VirtAddr(*address);
 
@@ -2403,9 +2402,8 @@ impl<'a, FUZZER: Fuzzer> FuzzVm<'a, FUZZER> {
                             }
                             break;
                         }
-
-                        log::debug!("FOUND {symbol} {addr:x?} but no translate");
                     }
+                    log::warn!("Found symbol {symbol} {addr:x?} but no translate through user or kernel page tables : USER={:x?} KERN={kern_cr3:x?}", self.cr3());
                 }
             }
         }
@@ -3210,6 +3208,17 @@ impl<'a, FUZZER: Fuzzer> FuzzVm<'a, FUZZER> {
                             // to display as possible symbols that we do know about
                             let possibles = self.get_symbols_containing(symbol);
                             if !possibles.is_empty() {
+                                if let Some((virt_addr, _cr3)) =
+                                    self.get_symbol_address(&possibles[0])
+                                {
+                                    eprintln!(
+                                        "DEBUG: Symbol was found: {symbol} -> {} {virt_addr:x?}",
+                                        possibles[0],
+                                    );
+                                } else {
+                                    eprintln!("DEBUG: Symbol was not found: {symbol}.");
+                                }
+
                                 // These are `println` instead of `log` so that the possibles can be printed to the screen
                                 // even using the TUI.
                                 eprintln!("Symbol was not found: {symbol}. Did you mean one of the following?");
