@@ -7,7 +7,7 @@ exclude = ["snapshot", "harness"]
 [dependencies]
 anyhow = "1"
 log = "0.4"
-snapchange = { git = "https://github.com/awslabs/snapchange" }
+snapchange = { git = "https://github.com/fuzzinglabs/snapchange" }
 # snapchange = { path = "../../" }
 
 [build-dependencies]
