@@ -9,7 +9,7 @@ use anyhow::Result;
 use snapchange::addrs::{Cr3, VirtAddr};
 use snapchange::fuzzer::{AddressLookup, Breakpoint, BreakpointType, Fuzzer};
 use snapchange::fuzzvm::FuzzVm;
-use snapchange::Execution;
+use snapchange::{Execution, InputWithMetadata};
 
 // crate::constants is generated using the `build.rs` script.
 const CR3: Cr3 = Cr3(crate::constants::CR3);
@@ -25,7 +25,11 @@ impl Fuzzer for TemplateFuzzer {
     const MAX_INPUT_LENGTH: usize = 1024;
     const MAX_MUTATIONS: u64 = 16;
 
-    fn set_input(&mut self, input: &Self::Input, fuzzvm: &mut FuzzVm<Self>) -> Result<()> {
+    fn set_input(
+        &mut self,
+        input: &InputWithMetadata<Vec<u8>>,
+        fuzzvm: &mut FuzzVm<Self>,
+    ) -> Result<()> {
         // Write the mutated input to the target. For example, to a buffer at a fixed address.
         fuzzvm.write_bytes_dirty(VirtAddr(0x402004), CR3, &input)?;
 
@@ -71,7 +75,7 @@ impl Fuzzer for TemplateFuzzer {
             Breakpoint {
                 lookup: AddressLookup::SymbolOffset("harness!symbol", 0x0),
                 bp_type: BreakpointType::Repeated,
-                bp_hook: |fuzzvm: &mut FuzzVm<Self>, _input, _fuzzer| {
+                bp_hook: |fuzzvm: &mut FuzzVm<Self>, _input, _fuzzer, _feedback| {
                     fuzzvm.set_rax(1);
                     Ok(Execution::Continue)
                 },
@@ -79,7 +83,7 @@ impl Fuzzer for TemplateFuzzer {
             Breakpoint {
                 lookup: AddressLookup::SymbolOffset("libc.so.6!__GI___getpid", 0x0),
                 bp_type: BreakpointType::Repeated,
-                bp_hook: |fuzzvm: &mut FuzzVm<Self>, _input, _fuzzer| {
+                bp_hook: |fuzzvm: &mut FuzzVm<Self>, _input, _fuzzer, _feedback| {
                     // Set the return value to 0xdeadbeef
                     fuzzvm.set_rax(0xdead_beef);
 
@@ -95,7 +99,7 @@ impl Fuzzer for TemplateFuzzer {
             Breakpoint {
                 lookup: AddressLookup::Virtual(VirtAddr(0xffffffffa6a8fa19), CR3),
                 bp_type: BreakpointType::Repeated,
-                bp_hook: |fuzzvm: &mut FuzzVm<Self>, _input, _fuzzer| {
+                bp_hook: |fuzzvm: &mut FuzzVm<Self>, _input, _fuzzer, _feedback| {
                     // mov r12d, dword ptr [rax+0x60]
                     // 0xc1 is currently at [rax + 0x60]. Overwrite this value with
                     // 0xdeadbeef
