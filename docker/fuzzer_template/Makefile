@@ -18,4 +18,7 @@ harness_image: ./Dockerfile.harness
 shell: harness_image
 	$(DOCKER) run --rm -it -v $(PWD)/snapshot:/snapshot --cap-add=SYS_PTRACE --security-opt seccomp=unconfined $(PROJECT).harness
 
-.PHONY: snapshot snapshot_image harness_image shell fuzzer
+snapshell: snapshot_image
+	$(DOCKER) run --rm -it -v $(PWD)/snapshot:/snapshot --cap-add=SYS_PTRACE --security-opt seccomp=unconfined --entrypoint "/bin/bash" $(PROJECT).snapshot
+
+.PHONY: snapshot snapshot_image harness_image shell snapshell fuzzer
