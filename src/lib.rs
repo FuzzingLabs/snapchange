@@ -380,23 +380,22 @@ fn handle_vmexit<FUZZER: Fuzzer>(
             log::info!("SREGS: {:x?}", fuzzvm.sregs());
 
             if events.exception.nr > 0 {
-                match events.exception.nr {
-                    1 => panic!("#DB: DEBUG"),
-                    2 => panic!("NMI"),
-                    3 => panic!("#BP: BREAKPOINT"),
-                    4 => panic!("#OF: OVERFLOW"),
-                    6 => {
-                        fuzzvm.print_context()?;
-                        panic!("#UD: INVALID OPCODE");
-                    }
-                    8 => panic!("#DF: DOUBLE FAULT"),
-                    10 => panic!("#TS: INVALID TSS"),
-                    11 => panic!("#NP: SEGMENT NOT PRESENT"),
-                    12 => panic!("#SS: STACK SEGMENT FAULT"),
-                    13 => panic!("#GP: GENERAL PROTECTION"),
-                    14 => panic!("#PF: PAGE FAULT"),
-                    _ => panic!("UNKNOWN EXCEPTION: {}", events.exception.nr),
-                }
+                let exception = match events.exception.nr {
+                    1 => "#DB: DEBUG",
+                    2 => "NMI",
+                    3 => "#BP: BREAKPOINT",
+                    4 => "#OF: OVERFLOW",
+                    6 => "#UD: INVALID OPCODE",
+                    8 => "#DF: DOUBLE FAULT",
+                    10 => "#TS: INVALID TSS",
+                    11 => "#NP: SEGMENT NOT PRESENT",
+                    12 => "#SS: STACK SEGMENT FAULT",
+                    13 => "#GP: GENERAL PROTECTION",
+                    14 => "#PF: PAGE FAULT",
+                    _ => &format!("UNKNOWN EXCEPTION: {}", events.exception.nr)[..],
+                };
+                log::error!("Shutdown due to exception: {}", exception);
+                panic!();
             }
 
             fuzzvm.print_context()?;
