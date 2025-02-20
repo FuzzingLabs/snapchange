@@ -408,7 +408,6 @@ impl Memory {
     }
 
     /// Map a physical page at the given [`VirtAddr`] in the given [`Cr3`]
-    #[allow(dead_code)]
     pub fn map_virt_addr_4k(&mut self, virt_addr: VirtAddr, cr3: Cr3) {
         // Check the current translation of the given address
         let translation = self.translate(virt_addr, cr3);

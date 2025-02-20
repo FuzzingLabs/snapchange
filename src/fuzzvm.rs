@@ -1440,6 +1440,36 @@ impl<'a, FUZZER: Fuzzer> FuzzVm<'a, FUZZER> {
         self.memory.translate(virt_addr, cr3)
     }
 
+    /// Allocate memory at the given [`VirtAddr`] using the given [`Cr3`] page table
+    /// mapping the given size
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// let mut fuzzvm = FuzzVm::create(..);
+    /// let addr = VirtAddr(0x401_0000);
+    /// let cr3  = fuzzvm.cr3();
+    ///
+    /// // Allocate 0x1000 bytes at the given address
+    /// let addr = fuzzvm.allocate_memory_at(addr, 0x1000, cr3)?;
+    /// ```
+    pub fn allocate_memory_at(
+        &mut self,
+        address: VirtAddr,
+        size: usize,
+        cr3: Cr3,
+    ) -> Result<VirtAddr> {
+        // compute the number of pages to allocate based on given size
+        let page_number = if size < 0x1000 { 1 } else { size / 0x1000 };
+
+        for i in 0..page_number {
+            let page_addr = address.offset((i * 0x1000) as u64);
+            self.memory.map_virt_addr_4k(page_addr, cr3);
+        }
+
+        Ok(address)
+    }
+
     /// Clear the resume flag from [`RFlags`]
     pub fn clear_resume_flag(&mut self) {
         let mut rflags = RFlags::from_bits_truncate(self.regs.rflags);
