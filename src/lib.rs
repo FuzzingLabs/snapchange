@@ -375,6 +375,8 @@ fn handle_vmexit<FUZZER: Fuzzer>(
         }
         FuzzVmExit::Shutdown => {
             let events = fuzzvm.vcpu_events();
+            let mut panic = false;
+
             log::info!("EVENTS: {:x?}", events);
             log::info!("EVENTS: {:x?}", fuzzvm.vcpu.get_vcpu_events());
             log::info!("SREGS: {:x?}", fuzzvm.sregs());
@@ -394,11 +396,15 @@ fn handle_vmexit<FUZZER: Fuzzer>(
                     14 => "#PF: PAGE FAULT",
                     _ => &format!("UNKNOWN EXCEPTION: {}", events.exception.nr)[..],
                 };
+
                 log::error!("Shutdown due to exception: {}", exception);
+                panic = true;
+            }
+            fuzzvm.print_context()?;
+
+            if panic {
                 panic!();
             }
-
-            fuzzvm.print_context()?;
 
             execution = Execution::Reset;
         }
